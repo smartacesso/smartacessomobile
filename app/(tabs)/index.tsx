@@ -2,9 +2,11 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useServer } from '../ServerContext';
 
 export default function SmartAcessoApp() {
   const router = useRouter();
+  const { servidor, setServidor, setToken } = useServer();
   
   // Estados do Login
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -16,7 +18,6 @@ export default function SmartAcessoApp() {
 
   // Estados de Configuração do Servidor
   const [modalVisible, setModalVisible] = useState(false);
-  const [servidor, setServidor] = useState('https://smartacesso.com.br');
 
   const handleLogin = async () => {
     if (!usuario || !senha || !organizacao) {
@@ -51,7 +52,10 @@ export default function SmartAcessoApp() {
         
         if (response.ok) {
           console.log("Login realizado com sucesso!");
-          // Aqui você pode salvar o iToken se o seu servidor retornar um
+          // Salvar o token retornado pelo servidor
+          if (data.token) {
+            setToken(data.token);
+          }
           setIsLoggedIn(true);
         } else {
           Alert.alert("Acesso Negado", data.mensagem || "Usuário ou senha incorretos.");
@@ -108,7 +112,7 @@ export default function SmartAcessoApp() {
             
             <View style={styles.logoArea}>
               <Text style={styles.logoText}>smart <Text style={{color: '#99CC33'}}>acesso</Text></Text>
-              <Text style={styles.appName}>SISTEMA DE SEGURANÇA</Text>
+              <Text style={styles.appName}>CONTROLE DE ACESSO</Text>
             </View>
 
             <View style={styles.loginCard}>

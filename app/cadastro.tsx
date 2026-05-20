@@ -2,9 +2,11 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Linking, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useServer } from './ServerContext';
 
 export default function CadastroScreen() {
   const router = useRouter();
+  const { servidor } = useServer();
   
   // Estados do formulário
   const [nome, setNome] = useState('');
@@ -21,8 +23,8 @@ export default function CadastroScreen() {
     // Limpa o número de telefone (remove parênteses, espaços e traços)
     const telefoneLimpo = telefone.replace(/\D/g, '');
     
-    // URL de exemplo que será enviada (pode ser o link do seu sistema ou um portal de pré-cadastro)
-    const linkCadastro = `https://smartacesso.com.br/portal/cadastro?ref=${Date.now()}`;
+    // URL do cadastro usando o servidor configurável
+    const linkCadastro = `${servidor}/portal/cadastro?ref=${Date.now()}`;
     
     const mensagem = `Olá ${nome}! Aqui está o seu link para finalizar o cadastro no Smart Acesso: \n\n${linkCadastro}`;
     
