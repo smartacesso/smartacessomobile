@@ -1,12 +1,16 @@
+import { Colors } from '@/constants/theme';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Linking, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useServer } from './ServerContext';
+import { useTheme } from './ThemeContext';
 
 export default function CadastroScreen() {
   const router = useRouter();
   const { servidor } = useServer();
+  const { isDark, colorScheme } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   
   // Estados do formulário
   const [nome, setNome] = useState('');
@@ -40,8 +44,8 @@ export default function CadastroScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       
       {/* HEADER */}
       <View style={styles.header}>
@@ -53,21 +57,22 @@ export default function CadastroScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.instructions}>
+        <View style={[styles.instructions, { backgroundColor: isDark ? '#1a472a' : '#E8F5E9', borderColor: isDark ? '#2d5f3f' : '#C8E6C9' }]}>
           <MaterialCommunityIcons name="whatsapp" size={40} color="#25D366" />
-          <Text style={styles.instructionText}>
+          <Text style={[styles.instructionText, { color: isDark ? '#81c784' : '#2E7D32' }]}>
             Preencha os dados abaixo. Ao salvar, abriremos o WhatsApp para enviar o link de finalização.
           </Text>
         </View>
 
-        <View style={styles.form}>
+        <View style={[styles.form, { backgroundColor: isDark ? '#242424' : '#FFF' }]}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nome Completo</Text>
-            <View style={styles.inputArea}>
-              <Feather name="user" size={20} color="#666" />
+            <Text style={[styles.label, { color: isDark ? '#aaa' : '#666' }]}>Nome Completo</Text>
+            <View style={[styles.inputArea, { backgroundColor: isDark ? '#333' : '#F9F9F9', borderColor: isDark ? '#444' : '#DDD' }]}>
+              <Feather name="user" size={20} color={isDark ? '#888' : "#666"} />
               <TextInput 
-                style={styles.input} 
-                placeholder="Ex: João Silva" 
+                style={[styles.input, { color: isDark ? colors.text : '#333' }]} 
+                placeholder="Ex: João Silva"
+                placeholderTextColor={isDark ? '#666' : '#999'}
                 value={nome}
                 onChangeText={setNome}
               />
@@ -75,12 +80,13 @@ export default function CadastroScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>WhatsApp (com DDD)</Text>
-            <View style={styles.inputArea}>
-              <Feather name="phone" size={20} color="#666" />
+            <Text style={[styles.label, { color: isDark ? '#aaa' : '#666' }]}>WhatsApp (com DDD)</Text>
+            <View style={[styles.inputArea, { backgroundColor: isDark ? '#333' : '#F9F9F9', borderColor: isDark ? '#444' : '#DDD' }]}>
+              <Feather name="phone" size={20} color={isDark ? '#888' : "#666"} />
               <TextInput 
-                style={styles.input} 
-                placeholder="319XXXXXXXX" 
+                style={[styles.input, { color: isDark ? colors.text : '#333' }]} 
+                placeholder="319XXXXXXXX"
+                placeholderTextColor={isDark ? '#666' : '#999'}
                 keyboardType="phone-pad"
                 value={telefone}
                 onChangeText={setTelefone}
@@ -89,12 +95,13 @@ export default function CadastroScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Documento (Opcional)</Text>
-            <View style={styles.inputArea}>
-              <Feather name="file-text" size={20} color="#666" />
+            <Text style={[styles.label, { color: isDark ? '#aaa' : '#666' }]}>Documento (Opcional)</Text>
+            <View style={[styles.inputArea, { backgroundColor: isDark ? '#333' : '#F9F9F9', borderColor: isDark ? '#444' : '#DDD' }]}>
+              <Feather name="file-text" size={20} color={isDark ? '#888' : "#666"} />
               <TextInput 
-                style={styles.input} 
-                placeholder="CPF ou RG" 
+                style={[styles.input, { color: isDark ? colors.text : '#333' }]} 
+                placeholder="CPF ou RG"
+                placeholderTextColor={isDark ? '#666' : '#999'}
                 value={documento}
                 onChangeText={setDocumento}
               />
@@ -102,11 +109,12 @@ export default function CadastroScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Observações</Text>
-            <View style={[styles.inputArea, { height: 100, alignItems: 'flex-start', paddingTop: 10 }]}>
+            <Text style={[styles.label, { color: isDark ? '#aaa' : '#666' }]}>Observações</Text>
+            <View style={[styles.inputArea, { height: 100, alignItems: 'flex-start', paddingTop: 10, backgroundColor: isDark ? '#333' : '#F9F9F9', borderColor: isDark ? '#444' : '#DDD' }]}>
               <TextInput 
-                style={styles.input} 
-                placeholder="Ex: Prestador de serviço, visitante..." 
+                style={[styles.input, { color: isDark ? colors.text : '#333' }]} 
+                placeholder="Ex: Prestador de serviço, visitante..."
+                placeholderTextColor={isDark ? '#666' : '#999'}
                 multiline
                 value={observacao}
                 onChangeText={setObservacao}
@@ -125,7 +133,7 @@ export default function CadastroScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1 },
   header: { 
     backgroundColor: '#001529', 
     height: 70, 
@@ -139,34 +147,29 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   instructions: { 
     alignItems: 'center', 
-    backgroundColor: '#E8F5E9', 
     padding: 20, 
     borderRadius: 15, 
     marginBottom: 25,
-    borderWidth: 1,
-    borderColor: '#C8E6C9'
+    borderWidth: 1
   },
   instructionText: { 
     textAlign: 'center', 
-    color: '#2E7D32', 
     marginTop: 10, 
     fontSize: 14,
     lineHeight: 20
   },
-  form: { backgroundColor: '#FFF', padding: 20, borderRadius: 15, elevation: 2 },
+  form: { padding: 20, borderRadius: 15, elevation: 2 },
   inputGroup: { marginBottom: 15 },
-  label: { fontSize: 13, color: '#666', marginBottom: 5, fontWeight: 'bold' },
+  label: { fontSize: 13, marginBottom: 5, fontWeight: 'bold' },
   inputArea: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: '#F9F9F9', 
     borderWidth: 1, 
-    borderColor: '#DDD', 
     borderRadius: 10, 
     paddingHorizontal: 15, 
     height: 50 
   },
-  input: { flex: 1, marginLeft: 10, color: '#333' },
+  input: { flex: 1, marginLeft: 10 },
   btnSalvar: { 
     backgroundColor: '#99CC33', 
     height: 55, 

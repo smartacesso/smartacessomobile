@@ -1,13 +1,19 @@
+import { Colors } from '@/constants/theme';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, SafeAreaView, SectionList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useServer } from './ServerContext';
+import { useTheme } from './ThemeContext';
 
 export default function HistoricoScreen() {
   const router = useRouter();
   const { servidor, token } = useServer();
+  const { isDark, colorScheme } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+  
   const [loading, setLoading] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({});
   
   const [eventosAgrupados, setEventosAgrupados] = useState<any[]>([]);
 
@@ -40,6 +46,13 @@ export default function HistoricoScreen() {
     return Object.keys(grupos).map(nome => ({
       title: nome,
       data: grupos[nome]
+    }));
+  };
+
+  const toggleSection = (sectionTitle: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionTitle]: !prev[sectionTitle]
     }));
   };
 
@@ -94,8 +107,8 @@ export default function HistoricoScreen() {
   useEffect(() => { carregarHistorico(); }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Feather name="arrow-left" size={24} color="#FFF" />
@@ -113,44 +126,60 @@ export default function HistoricoScreen() {
           sections={eventosAgrupados}
           keyExtractor={(item, index) => index.toString()}
           contentContainerStyle={{ padding: 15 }}
-          ListEmptyComponent={<Text style={styles.empty}>Nenhum acesso para este período.</Text>}
+          ListEmptyComponent={<Text style={[styles.empty, { color: colors.text }]}>Nenhum acesso para este período.</Text>}
           
           renderSectionHeader={({ section: { title } }) => (
-            <View style={styles.sectionHeader}>
-              <Feather name="user" size={18} color="#001529" style={{ marginRight: 8 }} />
-              <Text style={styles.sectionTitle}>{title}</Text>
-            </View>
+            <TouchableOpacity 
+              onPress={() => toggleSection(title)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.sectionHeader, { backgroundColor: isDark ? '#2a3a47' : '#E3E8ED' }]}>
+                <Feather name="user" size={18} color={isDark ? "#FFD700" : "#001529"} style={{ marginRight: 8 }} />
+                <Text style={[styles.sectionTitle, { color: isDark ? colors.text : "#001529" }]}>{title}</Text>
+                <Feather 
+                  name={expandedSections[title] ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  color={isDark ? "#FFD700" : "#001529"} 
+                  style={{ marginLeft: 'auto' }} 
+                />
+              </View>
+            </TouchableOpacity>
           )}
           
-          renderItem={({ item }) => {
+          renderItem={({ item, section }) => {
+            // Se a seção não está expandida, não renderiza o item
+            if (!expandedSections[section.title]) {
+              return null;
+            }
+
             // Lógica de cores baseada no "sentido" do JSON
             const isSaida = item.sentido === 'SAIDA';
             const corSentido = isSaida ? '#F44336' : '#99CC33';
             
             return (
-              <View style={styles.card}>
+              <View style={[styles.card, { backgroundColor: isDark ? '#242424' : '#FFF' }]}>
                 <View style={styles.avatarArea}>
                   {/* Corrida a busca da foto (agora busca de item.pedestre.foto) */}
                   {item.pedestre?.foto ? (
                     <Image source={{ uri: item.pedestre.foto }} style={styles.avatar} />
                   ) : (
-                    <View style={styles.avatarPlaceholder}>
+                    <View style={[styles.avatarPlaceholder, { backgroundColor: isDark ? '#3a3a3a' : '#F0F5E5' }]}>
                       <Feather name={isSaida ? "arrow-up-right" : "arrow-down-left"} size={20} color={corSentido} />
                     </View>
                   )}
                 </View>
                 
-                <View style={{flex: 1}}>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <View style={{flex: 1, flexWrap: 'wrap'}}>
+                  <View style={{flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap'}}>
                      {/* Texto explicitando o Sentido (Entrada/Saída) */}
-                    <Text style={[styles.sentidoText, { color: corSentido }]}>
+                    <Text style={[styles.sentidoText, { color: corSentido }]} numberOfLines={0}>
                       {item.sentido || "ACESSO"}
                     </Text>
                   </View>
                   
                   {/* Data formatada bonito */}
-                  <Text style={styles.info}>{formatarData(item.data)}</Text>
-                  <Text style={styles.local}>{item.local || "Portaria Principal"}</Text>
+                  <Text style={[styles.info, { color: isDark ? colors.text : '#333' }]} numberOfLines={0}>{formatarData(item.data)}</Text>
+                  <Text style={[styles.local, { color: isDark ? '#aaa' : '#666' }]} numberOfLines={0}>{item.local || "Portaria Principal"}</Text>
                 </View>
 
                 {/* Barra lateral colorida de acordo com a Entrada/Saida */}
@@ -165,21 +194,21 @@ export default function HistoricoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1 },
   header: { backgroundColor: '#001529', height: 70, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10 },
   headerTitle: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E3E8ED', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, marginTop: 15, marginBottom: 10 },
-  sectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#001529', textTransform: 'uppercase' },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, marginTop: 15, marginBottom: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: 'bold', textTransform: 'uppercase' },
   
-  card: { backgroundColor: '#FFF', padding: 12, borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center', elevation: 2 },
+  card: { padding: 12, borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center', elevation: 2 },
   avatarArea: { marginRight: 12 },
   avatar: { width: 45, height: 45, borderRadius: 22 },
-  avatarPlaceholder: { width: 45, height: 45, borderRadius: 22, backgroundColor: '#F0F5E5', justifyContent: 'center', alignItems: 'center' },
+  avatarPlaceholder: { width: 45, height: 45, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
   
   sentidoText: { fontSize: 12, fontWeight: 'bold', marginBottom: 2 },
-  info: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-  local: { fontSize: 12, color: '#666', marginTop: 2 },
+  info: { fontSize: 14, fontWeight: 'bold' },
+  local: { fontSize: 12, marginTop: 2 },
   indicator: { width: 4, height: 35, borderRadius: 2, marginLeft: 10 },
-  empty: { textAlign: 'center', marginTop: 50, color: '#999' }
+  empty: { textAlign: 'center', marginTop: 50 }
 });

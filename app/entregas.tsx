@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/theme';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -14,6 +15,7 @@ import {
   View
 } from 'react-native';
 import { useServer } from './ServerContext';
+import { useTheme } from './ThemeContext';
 
 // Interface baseada na estrutura do seu backend
 interface Encomenda {
@@ -30,6 +32,9 @@ interface Encomenda {
 export default function EntregasScreen() {
   const router = useRouter();
   const { servidor, token } = useServer();
+  const { isDark, colorScheme } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+  
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [encomendas, setEncomendas] = useState<Encomenda[]>([]);
@@ -78,8 +83,8 @@ export default function EntregasScreen() {
     item.confirmaRetirada === true;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.iconBox}>
+    <View style={[styles.card, { backgroundColor: isDark ? '#242424' : '#FFF' }]}>
+      <View style={[styles.iconBox, { backgroundColor: isDark ? '#1a3a5c' : '#E3F2FD' }]}>
         <MaterialCommunityIcons
           name={item.tipo === 'PACOTE'
             ? "package-variant"
@@ -90,13 +95,13 @@ export default function EntregasScreen() {
       </View>
 
       <View style={styles.cardContent}>
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: isDark ? colors.text : '#1A1C1E' }]}>
           {(item.codigoRastreio || "Sem Código")} - {String(item.tipo || "")}
         </Text>
 
-        <Text style={styles.sub}>
+        <Text style={[styles.sub, { color: isDark ? '#aaa' : '#666' }]}>
           {isRetirado
-            ? `Retirado por ${item.nomeQuemRetirou || "N/A"} (${item.documentoQuemRetirou || "N/A"}) em ${
+            ? `Retirado em ${
                 item.dataRetirada
                   ? new Date(item.dataRetirada).toLocaleDateString()
                   : "Data não informada"
@@ -112,9 +117,7 @@ export default function EntregasScreen() {
         <Text
           style={[
             styles.statusInfo,
-            isRetirado
-              ? styles.textSuccess
-              : styles.textPending
+            { color: isRetirado ? '#2E7D32' : '#EF6C00' }
           ]}
         >
           {isRetirado
@@ -126,17 +129,13 @@ export default function EntregasScreen() {
       <View
         style={[
           styles.badge,
-          isRetirado
-            ? styles.badgeSuccess
-            : styles.badgePending
+          { backgroundColor: isRetirado ? (isDark ? '#1a472a' : '#E8F5E9') : (isDark ? '#5c3a1a' : '#FFF3E0') }
         ]}
       >
         <Text
           style={[
             styles.badgeText,
-            isRetirado
-              ? styles.textSuccess
-              : styles.textPending
+            { color: isRetirado ? '#2E7D32' : '#EF6C00' }
           ]}
         >
           {isRetirado ? "ENTREGUE" : "DISPONÍVEL"}
@@ -147,8 +146,8 @@ export default function EntregasScreen() {
 };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#001529" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor="#001529" />
       
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
@@ -164,7 +163,7 @@ export default function EntregasScreen() {
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#2196F3" />
-          <Text style={styles.loadingText}>Carregando encomendas...</Text>
+          <Text style={[styles.loadingText, { color: isDark ? '#aaa' : '#666' }]}>Carregando encomendas...</Text>
         </View>
       ) : (
         <FlatList
@@ -177,8 +176,8 @@ export default function EntregasScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Feather name="box" size={50} color="#CCC" />
-              <Text style={styles.emptyText}>Nenhuma encomenda encontrada.</Text>
+              <Feather name="box" size={50} color={isDark ? "#444" : "#CCC"} />
+              <Text style={[styles.emptyText, { color: isDark ? '#888' : '#999' }]}>Nenhuma encomenda encontrada.</Text>
             </View>
           }
         />
@@ -188,7 +187,7 @@ export default function EntregasScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1 },
   header: { 
     backgroundColor: '#001529', 
     height: 60, 
@@ -201,7 +200,6 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#FFF', fontSize: 18, fontWeight: '700', letterSpacing: 1 },
   listContent: { padding: 16, paddingBottom: 30 },
   card: { 
-    backgroundColor: '#FFF', 
     padding: 15, 
     borderRadius: 12, 
     marginBottom: 12, 
@@ -217,14 +215,13 @@ const styles = StyleSheet.create({
     width: 48, 
     height: 48, 
     borderRadius: 12, 
-    backgroundColor: '#E3F2FD', 
     justifyContent: 'center', 
     alignItems: 'center', 
     marginRight: 15 
   },
   cardContent: { flex: 1 },
-  title: { fontSize: 15, fontWeight: 'bold', color: '#1A1C1E' },
-  sub: { fontSize: 12, color: '#666', marginTop: 2 },
+  title: { fontSize: 15, fontWeight: 'bold' },
+  sub: { fontSize: 12, marginTop: 2 },
   statusInfo: { fontSize: 11, marginTop: 4, fontWeight: '500' },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   badgeSuccess: { backgroundColor: '#E8F5E9' },
@@ -233,7 +230,7 @@ const styles = StyleSheet.create({
   textSuccess: { color: '#2E7D32' },
   textPending: { color: '#EF6C00' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 10, color: '#666' },
+  loadingText: { marginTop: 10 },
   emptyContainer: { alignItems: 'center', marginTop: 60 },
-  emptyText: { marginTop: 10, color: '#999', fontSize: 16 }
+  emptyText: { marginTop: 10, fontSize: 16 }
 });

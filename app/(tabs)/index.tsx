@@ -1,12 +1,17 @@
+import { Colors } from '@/constants/theme';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useServer } from '../ServerContext';
+import { useTheme } from '../ThemeContext';
 
 export default function SmartAcessoApp() {
   const router = useRouter();
   const { servidor, setServidor, setToken } = useServer();
+  const { isDark, colorScheme } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   
   // Estados do Login
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -15,6 +20,74 @@ export default function SmartAcessoApp() {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
+
+  // Estados de Configuração do Servidor
+  const [modalVisible, setModalVisible] = useState(false);
+
+  // Salvar informações de login (exceto senha)
+  const saveLoginInfo = async (org: string, user: string, srv: string) => {
+    try {
+      await AsyncStorage.multiSet([
+        ['@login_organization', org],
+        ['@login_user', user],
+        ['@login_server', srv],
+      ]);
+    } catch (e) {
+      console.error('Erro ao salvar informações de login:', e);
+    }
+  };
+
+  // Carregar informações de login salvas
+  const loadLoginInfo = async () => {
+    try {
+      const values = await AsyncStorage.multiGet([
+        '@login_organization',
+        '@login_user',
+        '@login_server',
+      ]);
+      
+      const org = values[0][1];
+      const user = values[1][1];
+      const srv = values[2][1];
+
+      if (org) setOrganizacao(org);
+      if (user) setUsuario(user);
+      if (srv) setServidor(srv);
+    } catch (e) {
+      console.error('Erro ao carregar informações de login:', e);
+    }
+  };
+
+  // Carregar dados salvos ao inicializar
+  useEffect(() => {
+    loadLoginInfo();
+  }, []);
+
+  // Função de logout
+  const handleLogout = async () => {
+    Alert.alert(
+      'Sair',
+      'Deseja sair da sua conta?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Limpar apenas o token (manter outras config)
+              setIsLoggedIn(false);
+              setToken(null);
+              setSenha('');
+              // Manter organizacao, usuario e servidor salvos
+            } catch (e) {
+              console.error('Erro ao fazer logout:', e);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   // Estados de Configuração do Servidor
   const [modalVisible, setModalVisible] = useState(false);
@@ -56,6 +129,8 @@ export default function SmartAcessoApp() {
           if (data.token) {
             setToken(data.token);
           }
+          // Salvar informações de login (exceto senha)
+          await saveLoginInfo(organizacao, usuario, servidor);
           setIsLoggedIn(true);
         } else {
           Alert.alert("Acesso Negado", data.mensagem || "Usuário ou senha incorretos.");
@@ -81,20 +156,21 @@ export default function SmartAcessoApp() {
   // TELA DE LOGIN
   if (!isLoggedIn) {
     return (
-      <SafeAreaView style={styles.loginBg}>
-        <StatusBar barStyle="light-content" />
+      <SafeAreaView style={[styles.loginBg, { backgroundColor: isDark ? '#000D1A' : '#F5F5F5' }]}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         
         <Modal animationType="fade" transparent={true} visible={modalVisible}>
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Configurar Servidor</Text>
-              <View style={styles.modalInputRow}>
-                <Feather name="globe" size={20} color="#666" />
+            <View style={[styles.modalContent, { backgroundColor: isDark ? '#001A33' : '#FFF' }]}>
+              <Text style={[styles.modalTitle, { color: isDark ? '#FFF' : '#333' }]}>Configurar Servidor</Text>
+              <View style={[styles.modalInputRow, { backgroundColor: isDark ? '#000D1A' : '#F5F5F5', borderColor: isDark ? '#002B52' : '#DDD' }]}>
+                <Feather name="globe" size={20} color={isDark ? "#999" : "#666"} />
                 <TextInput 
-                  style={styles.modalInput} 
+                  style={[styles.modalInput, { color: isDark ? '#FFF' : '#333' }]} 
                   value={servidor} 
                   onChangeText={setServidor} 
-                  autoCapitalize="none" 
+                  autoCapitalize="none"
+                  placeholderTextColor={isDark ? "#666" : "#999"}
                 />
               </View>
               <TouchableOpacity style={styles.btnSalvarModal} onPress={() => setModalVisible(false)}>
@@ -107,30 +183,30 @@ export default function SmartAcessoApp() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.loginContent}>
             <TouchableOpacity style={styles.settingsBtn} onPress={() => setModalVisible(true)}>
-              <Feather name="settings" size={26} color="#666" />
+              <Feather name="settings" size={26} color={isDark ? "#999" : "#666"} />
             </TouchableOpacity>
             
             <View style={styles.logoArea}>
-              <Text style={styles.logoText}>smart <Text style={{color: '#99CC33'}}>acesso</Text></Text>
+              <Text style={[styles.logoText, { color: isDark ? '#FFF' : '#333' }]}>smart <Text style={{color: '#99CC33'}}>acesso</Text></Text>
               <Text style={styles.appName}>CONTROLE DE ACESSO</Text>
             </View>
 
-            <View style={styles.loginCard}>
-              <View style={styles.inputRow}>
+            <View style={[styles.loginCard, { backgroundColor: isDark ? '#001A33' : '#FFF' }]}>
+              <View style={[styles.inputRow, { backgroundColor: isDark ? '#000D1A' : '#F5F5F5', borderColor: isDark ? '#002B52' : '#DDD' }]}>
                 <MaterialCommunityIcons name="office-building" size={20} color="#99CC33" />
-                <TextInput placeholder="Organização" placeholderTextColor="#666" style={styles.textInput} value={organizacao} onChangeText={setOrganizacao} />
+                <TextInput placeholder="Organização" placeholderTextColor={isDark ? "#666" : "#999"} style={[styles.textInput, { color: isDark ? '#FFF' : '#333' }]} value={organizacao} onChangeText={setOrganizacao} />
               </View>
               
-              <View style={styles.inputRow}>
-                <Feather name="user" size={20} color="#666" />
-                <TextInput placeholder="Usuário" placeholderTextColor="#666" style={styles.textInput} value={usuario} onChangeText={setUsuario} autoCapitalize="none" />
+              <View style={[styles.inputRow, { backgroundColor: isDark ? '#000D1A' : '#F5F5F5', borderColor: isDark ? '#002B52' : '#DDD' }]}>
+                <Feather name="user" size={20} color={isDark ? "#999" : "#666"} />
+                <TextInput placeholder="Usuário" placeholderTextColor={isDark ? "#666" : "#999"} style={[styles.textInput, { color: isDark ? '#FFF' : '#333' }]} value={usuario} onChangeText={setUsuario} autoCapitalize="none" />
               </View>
 
-              <View style={styles.inputRow}>
-                <Feather name="lock" size={20} color="#666" />
-                <TextInput placeholder="Senha" secureTextEntry={!mostrarSenha} placeholderTextColor="#666" style={styles.textInput} value={senha} onChangeText={setSenha} />
+              <View style={[styles.inputRow, { backgroundColor: isDark ? '#000D1A' : '#F5F5F5', borderColor: isDark ? '#002B52' : '#DDD' }]}>
+                <Feather name="lock" size={20} color={isDark ? "#999" : "#666"} />
+                <TextInput placeholder="Senha" secureTextEntry={!mostrarSenha} placeholderTextColor={isDark ? "#666" : "#999"} style={[styles.textInput, { color: isDark ? '#FFF' : '#333' }]} value={senha} onChangeText={setSenha} />
                 <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
-                  <Feather name={mostrarSenha ? "eye" : "eye-off"} size={20} color="#666" />
+                  <Feather name={mostrarSenha ? "eye" : "eye-off"} size={20} color={isDark ? "#999" : "#666"} />
                 </TouchableOpacity>
               </View>
 
@@ -146,8 +222,13 @@ export default function SmartAcessoApp() {
 
   // TELA DASHBOARD (PÓS-LOGIN)
   return (
-    <SafeAreaView style={styles.homeBg}>
-      <View style={styles.header}><Text style={styles.headerTitle}>SMART ACESSO</Text></View>
+    <SafeAreaView style={[styles.homeBg, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#0D1B2A' : '#001529', borderBottomColor: isDark ? '#002B52' : '#001529', borderBottomWidth: 1 }]}>
+        <Text style={styles.headerTitle}>SMART ACESSO</Text>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Feather name="log-out" size={22} color="#FFF" />
+        </TouchableOpacity>
+      </View>
       
       <View style={styles.menuGrid}>
         <MenuButton title="CADASTRO" icon="account-plus" color="#009688" onPress={() => router.push('/cadastro')} />
@@ -156,9 +237,9 @@ export default function SmartAcessoApp() {
         <MenuButton title="ENTREGAS" icon="truck-delivery" color="#2196F3" onPress={() => router.push('/entregas')} />
       </View>
 
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: isDark ? '#242424' : '#FFF', borderTopColor: isDark ? '#444' : '#DDD' }]}>
         <TouchableOpacity style={styles.navItem}><Feather name="home" size={24} color="#3F51B5" /><Text style={{fontSize:10, color:'#3F51B5'}}>Início</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/perfil')}><Feather name="user" size={24} color="#666" /><Text style={{fontSize:10, color:'#666'}}>Perfil</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/perfil')}><Feather name="user" size={24} color={isDark ? "#999" : "#666"} /><Text style={{fontSize:10, color: isDark ? "#999" : '#666'}}>Perfil</Text></TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -172,29 +253,30 @@ const MenuButton = ({ title, icon, color, onPress }: any) => (
 );
 
 const styles = StyleSheet.create({
-  loginBg: { flex: 1, backgroundColor: '#000D1A' },
+  loginBg: { flex: 1 },
   loginContent: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 25 },
   settingsBtn: { alignSelf: 'flex-end', marginBottom: 20 },
   logoArea: { alignItems: 'center', marginBottom: 40 },
-  logoText: { fontSize: 36, color: '#FFF', fontWeight: 'bold' },
+  logoText: { fontSize: 36, fontWeight: 'bold' },
   appName: { fontSize: 12, color: '#99CC33', fontWeight: 'bold', letterSpacing: 2 },
-  loginCard: { width: '100%', backgroundColor: '#001A33', padding: 25, borderRadius: 25 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#000D1A', borderRadius: 12, paddingHorizontal: 15, height: 55, marginBottom: 15, borderWidth: 1, borderColor: '#002B52' },
-  textInput: { flex: 1, color: '#FFF', marginLeft: 10 },
+  loginCard: { width: '100%', padding: 25, borderRadius: 25 },
+  inputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, paddingHorizontal: 15, height: 55, marginBottom: 15, borderWidth: 1 },
+  textInput: { flex: 1, marginLeft: 10 },
   btnPrimary: { backgroundColor: '#99CC33', height: 55, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   btnPrimaryText: { color: '#000', fontWeight: 'bold', fontSize: 16 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#001A33', borderRadius: 20, padding: 25 },
-  modalTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  modalInputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#000D1A', borderRadius: 10, paddingHorizontal: 15, height: 50, marginBottom: 20 },
-  modalInput: { flex: 1, color: '#FFF', marginLeft: 10 },
+  modalContent: { borderRadius: 20, padding: 25 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  modalInputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, paddingHorizontal: 15, height: 50, marginBottom: 20, borderWidth: 1 },
+  modalInput: { flex: 1, marginLeft: 10 },
   btnSalvarModal: { backgroundColor: '#99CC33', height: 50, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  homeBg: { flex: 1, backgroundColor: '#F4F6F8' },
-  header: { backgroundColor: '#001529', height: 60, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
+  homeBg: { flex: 1 },
+  header: { backgroundColor: '#001529', height: 60, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },
+  headerTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold', flex: 1, textAlign: 'center' },
+  logoutBtn: { paddingRight: 15 },
   menuGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 12, justifyContent: 'space-between' },
   cardMenu: { width: '47%', height: 160, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginBottom: 18 },
   cardMenuText: { color: 'white', fontWeight: 'bold', marginTop: 12, fontSize: 14 },
-  bottomNav: { position: 'absolute', bottom: 0, width: '100%', height: 75, backgroundColor: '#FFF', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', borderTopWidth: 1, borderColor: '#DDD' },
+  bottomNav: { position: 'absolute', bottom: 0, width: '100%', height: 75, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', borderTopWidth: 1 },
   navItem: { alignItems: 'center' }
 });

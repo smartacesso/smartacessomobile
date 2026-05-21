@@ -1,10 +1,14 @@
+import { Colors } from '@/constants/theme';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from './ThemeContext';
 
 export default function AvisosScreen() {
   const router = useRouter();
+  const { isDark, colorScheme } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   // Exemplo de dados de avisos (Isso depois virá do seu banco de dados)
   const listaAvisos = [
@@ -14,8 +18,8 @@ export default function AvisosScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       
       {/* Cabeçalho */}
       <View style={styles.header}>
@@ -27,14 +31,14 @@ export default function AvisosScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         {listaAvisos.map((aviso) => (
-          <View key={aviso.id} style={styles.avisoCard}>
+          <View key={aviso.id} style={[styles.avisoCard, { backgroundColor: isDark ? '#242424' : '#FFF' }]}>
             <View style={styles.avisoHeader}>
               <MaterialCommunityIcons name="bullhorn-variant-outline" size={24} color="#F44336" />
-              <Text style={styles.avisoTitle}>{aviso.titulo}</Text>
+              <Text style={[styles.avisoTitle, { color: isDark ? colors.text : '#333' }]}>{aviso.titulo}</Text>
             </View>
-            <Text style={styles.avisoData}>{aviso.data}</Text>
-            <Text style={styles.avisoDesc}>{aviso.desc}</Text>
-            <TouchableOpacity style={styles.readMore}>
+            <Text style={[styles.avisoData, { color: isDark ? '#888' : '#999' }]}>{aviso.data}</Text>
+            <Text style={[styles.avisoDesc, { color: isDark ? '#aaa' : '#666' }]}>{aviso.desc}</Text>
+            <TouchableOpacity style={[styles.readMore, { borderTopColor: isDark ? '#444' : '#EEE' }]}>
               <Text style={styles.readMoreText}>LER MAIS</Text>
               <Feather name="chevron-right" size={16} color="#F44336" />
             </TouchableOpacity>
@@ -46,16 +50,16 @@ export default function AvisosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F2F5' },
+  container: { flex: 1 },
   header: { backgroundColor: '#001529', height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   backBtn: { position: 'absolute', left: 15 },
   headerTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
   content: { padding: 15 },
-  avisoCard: { backgroundColor: '#FFF', borderRadius: 12, padding: 15, marginBottom: 15, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  avisoCard: { borderRadius: 12, padding: 15, marginBottom: 15, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   avisoHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
-  avisoTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginLeft: 10 },
-  avisoData: { fontSize: 12, color: '#999', marginBottom: 10, marginLeft: 34 },
-  avisoDesc: { fontSize: 14, color: '#666', lineHeight: 20, marginBottom: 10 },
-  readMore: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 10 },
+  avisoTitle: { fontSize: 16, fontWeight: 'bold', marginLeft: 10 },
+  avisoData: { fontSize: 12, marginBottom: 10, marginLeft: 34 },
+  avisoDesc: { fontSize: 14, lineHeight: 20, marginBottom: 10 },
+  readMore: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', borderTopWidth: 1, paddingTop: 10 },
   readMoreText: { color: '#F44336', fontWeight: 'bold', fontSize: 12, marginRight: 5 }
 });
