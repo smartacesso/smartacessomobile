@@ -10,15 +10,22 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.seuusuario.smartacesso"
+      "bundleIdentifier": "br.com.smartacesso.mobile.app",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#000D1A"
       },
-      "package": "com.seuusuario.smartacesso",
-      "edgeToEdgeEnabled": true
+      "package": "br.com.smartacesso.mobile.app",
+      "googleServicesFile": "./google-services.json",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "output": "static",
@@ -26,6 +33,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#24b694",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ],
       [
         "expo-splash-screen",
         {

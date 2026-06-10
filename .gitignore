@@ -38,6 +38,7 @@ yarn-error.*
 
 app-example
 
-# generated native folders
-/ios
-/android
+# Firebase (não commitar credenciais)
+google-services.json
+GoogleService-Info.plist
+

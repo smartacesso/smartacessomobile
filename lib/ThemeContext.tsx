@@ -12,8 +12,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemColorScheme = useColorScheme() ?? 'light';
-  const [isDark, setIsDark] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  const [isDark, setIsDark] = useState(systemColorScheme === 'dark');
 
   useEffect(() => {
     const loadThemePreference = async () => {
@@ -21,20 +20,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const saved = await AsyncStorage.getItem('@theme_preference');
         if (saved !== null) {
           setIsDark(JSON.parse(saved));
-        } else {
-          // Se não houver preferência salva, usar a preferência do sistema
-          setIsDark(systemColorScheme === 'dark');
         }
       } catch (e) {
         console.error('Erro ao carregar preferência de tema:', e);
-        setIsDark(systemColorScheme === 'dark');
-      } finally {
-        setIsReady(true);
       }
     };
 
     loadThemePreference();
-  }, [systemColorScheme]);
+  }, []);
 
   const updateTheme = async (isDarkValue: boolean) => {
     try {
@@ -51,10 +44,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     colorScheme: isDark ? 'dark' : 'light',
     updateTheme,
   };
-
-  if (!isReady) {
-    return null;
-  }
 
   return (
     <ThemeContext.Provider value={value}>

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { AppUsuario } from './apiService';
 
 // Chaves de armazenamento
 export const STORAGE_KEYS = {
@@ -7,6 +8,7 @@ export const STORAGE_KEYS = {
   LOGIN_SERVER: '@login_server',
   THEME_PREFERENCE: '@theme_preference',
   TOKEN: '@auth_token',
+  USER_PROFILE: '@user_profile',
 };
 
 // Salvar informações de login (exceto senha)
@@ -55,6 +57,7 @@ export const clearLoginInfo = async () => {
       STORAGE_KEYS.LOGIN_USER,
       STORAGE_KEYS.LOGIN_SERVER,
       STORAGE_KEYS.TOKEN,
+      STORAGE_KEYS.USER_PROFILE,
     ]);
   } catch (e) {
     console.error('Erro ao limpar informações de login:', e);
@@ -91,3 +94,21 @@ export const clearToken = async () => {
     throw e;
   }
 };
+
+export async function saveUserProfile(profile: AppUsuario): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
+}
+
+export async function loadUserProfile(): Promise<AppUsuario | null> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+    if (!raw) return null;
+    return JSON.parse(raw) as AppUsuario;
+  } catch {
+    return null;
+  }
+}
+
+export async function clearUserProfile(): Promise<void> {
+  await AsyncStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
+}
